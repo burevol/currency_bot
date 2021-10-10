@@ -2,6 +2,12 @@ import requests
 import json
 from config import EXCHANGE_API_KEY
 
+currency_dict = {
+    "рубль": "RUB",
+    "доллар": "USD",
+    "евро": "EUR"
+}
+
 
 class APIException(Exception):
     pass
