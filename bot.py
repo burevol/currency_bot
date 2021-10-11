@@ -7,10 +7,10 @@ bot = telebot.TeleBot(TELEGRAM_API_KEY)
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "Это бот для пересчета валют. \n Использование: \n "
-                          "/help - это сообщение \n /values - список доступных валют \n "
-                          "<название базовой валюты> <название валюты пересчета> <количество> "
-                          "- пересчет валюты из базовой\n"
+    bot.reply_to(message, "Это бот для пересчета валют. \n Использование:\n "
+                          "/help - это сообщение.\n /values - список доступных валют.\n "
+                          "<название базовой валюты> <в какую валюту перевести> <количество переводимой валюты>\n"
+                          "- пересчет валюты из базовой.\n"
                           "Пример: доллар рубль 15")
 
 
@@ -25,31 +25,11 @@ def send_values(message):
 @bot.message_handler(content_types=["text"])
 def main_handler(message):
     try:
-        try:
-            base_name, query_name, amount_text = message.text.split()
-        except ValueError:
-            raise APIException("Неверный формат ввода.")
-
-        if not amount_text.isdigit():
-            raise APIException("Третьим параметром должно быть число.")
-
-        try:
-            base = currency_dict[base_name]
-        except Exception:
-            raise APIException(f'Валюта {base_name} не обнаружена')
-
-        try:
-            query = currency_dict[query_name]
-        except Exception:
-            raise APIException(f'Валюта {query_name} не обнаружена')
-
-        try:
-            result = Currency.get_price(base, query, int(amount_text))
-        except Exception:
-            raise APIException("Ошибка при получении курсов валют")
-
+        result = Currency.get_price(message)
     except APIException as ex:
-        bot.reply_to(message, str(ex))
+        bot.reply_to(message, f'Ошибка пользователя.\n{ex}')
+    except Exception:
+        bot.reply_to(message, "Не удалось обработать команду.")
     else:
         bot.reply_to(message, result)
 
