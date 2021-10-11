@@ -25,7 +25,11 @@ def send_values(message):
 @bot.message_handler(content_types=["text"])
 def main_handler(message):
     try:
-        result = Currency.get_price(message)
+        values = message.text.split()
+        if len(values) != 3:
+            raise APIException("Неверный формат ввода. /help - инструкция по использованию.")
+        base, query, amount = values
+        result = Currency.get_price(base, query, amount)
     except APIException as ex:
         bot.reply_to(message, f'Ошибка пользователя.\n{ex}')
     except Exception:

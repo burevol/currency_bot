@@ -15,36 +15,32 @@ class APIException(Exception):
 
 class Currency:
     @staticmethod
-    def get_price(message):
+    def get_price(base, query, amount):
         try:
-            base_name, query_name, amount_text = message.text.split()
-        except ValueError:
-            raise APIException("Неверный формат ввода. /help - инструкция по использованию.")
-
-        try:
-            amount = float(amount_text)
+            amount_float = float(amount)
         except Exception:
             raise APIException("Третьим параметром должно быть число.")
 
-        try:
-            base = currency_dict[base_name.lower()]
-        except KeyError:
-            raise APIException(f'Валюта {base_name} не обнаружена.')
-
-        try:
-            query = currency_dict[query_name.lower()]
-        except KeyError:
-            raise APIException(f'Валюта {query_name} не обнаружена.')
-
         if base == query:
-            raise APIException(f'Нельзя переводить {base} в {query}.')
+            raise APIException(f'Нельзя переводить одинаковые валюты {base} в {query}.')
 
         try:
+            base_ticker = currency_dict[base.lower()]
+        except KeyError:
+            raise APIException(f'Валюта {base} не обнаружена.')
+
+        try:
+            query_ticker = currency_dict[query.lower()]
+        except KeyError:
+            raise APIException(f'Валюта {query} не обнаружена.')
+
+        try:
+            query = f'{base_ticker}_{query_ticker}&compact=ultra&apiKey={EXCHANGE_API_KEY}'
             response = requests.get(
-                f"https://free.currconv.com/api/v7/convert?q={base}_{query}&compact=ultra&apiKey={EXCHANGE_API_KEY}")
+                f"https://free.currconv.com/api/v7/convert?q={query}")
             info = json.loads(response.content)
-            result = info[f'{base}_{query}'] * amount
+            result = info[f'{base_ticker}_{query_ticker}'] * amount_float
         except Exception:
             raise APIException("Не удалось получить курсы валют.")
 
-        return f'Цена {amount} {base} = {result:.2f} {query}'
+        return f'Цена {amount} {base_ticker} = {result:.2f} {query_ticker}'
